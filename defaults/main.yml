@@ -1,0 +1,23 @@
+# Project and service
+docker_pihole_project_name: "pihole"
+docker_pihole_service_name: "pihole"
+docker_pihole_service_image: "pihole/pihole:latest"
+docker_pihole_service_container_name: "pihole"
+
+# Network
+docker_pihole_service_network_name: "pihole_network"
+docker_pihole_service_network_driver: "macvlan"
+docker_pihole_service_network_parent: "{{ ansible_default_ipv4.interface }}"
+docker_pihole_service_network_ipv4: "{{ ansible_default_ipv4.address | ipmath(1) }}"
+docker_pihole_service_network_subnet: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipaddr('network/prefix') }}"
+docker_pihole_service_network_gateway: "{{ ansible_default_ipv4.gateway }}"
+
+# Storage
+docker_pihole_service_volume: "/pihole"
+docker_pihole_service_volume_etc: "{{ docker_pihole_service_volume }}/etc"
+docker_pihole_service_volume_dnsmasq: "{{ docker_pihole_service_volume }}/dnsmasq.d"
+
+# PiHole configuration
+docker_pihole_dns_fallback: "1.1.1.1"
+docker_pihole_dns_1: "1.1.1.1"
+docker_pihole_dns_2: "8.8.8.8"

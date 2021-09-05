@@ -1,0 +1,48 @@
+- name: Check PiHole volumes root
+  register: _volumes_root
+  stat:
+    path: "{{ docker_pihole_service_volume | dirname }}"
+  tags: [always]
+
+
+- name: Assertions
+  assert:
+    that:
+      - _volumes_root.stat.exists
+  tags: [always]
+
+
+- name: Setup PiHoles volumes
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ docker_pihole_service_volume_etc }}"
+    - "{{ docker_pihole_service_volume_dnsmasq }}"
+  tags: [never, setup]
+
+
+- name: Deploy PiHole service
+  docker_compose:
+    project_name: "{{ docker_pihole_project_name }}"
+    definition: "{{ lookup('template', 'docker-compose.yml.j2') | from_yaml }}"
+    state: present
+  tags: [never, setup]
+
+
+- name: Remove PiHole service
+  docker_compose:
+    project_name: "{{ docker_pihole_project_name }}"
+    definition: "{{ lookup('template', 'docker-compose.yml.j2') | from_yaml }}"
+    state: absent
+  tags: [never, teardown, remove]
+
+
+- name: Remove PiHole volumes
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ docker_pihole_service_volume_etc }}"
+    - "{{ docker_pihole_service_volume_dnsmasq }}"
+  tags: [never, remove]

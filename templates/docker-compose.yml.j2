@@ -1,0 +1,45 @@
+#jinja2: lstrip_blocks: "False", trim_blocks: "False"
+version: '2'
+
+services:
+  {{ docker_pihole_service_name }}:
+    container_name: "{{ docker_pihole_service_container_name }}"
+    image: "{{ docker_pihole_service_image }}"
+    {% if docker_pihole_service_network_name | default('') | length > 0 %}
+    networks:
+      {{ docker_pihole_service_network_name }}:
+        {% if docker_pihole_service_network_ipv4 %}
+        ipv4_address: {{ docker_pihole_service_network_ipv4 }}
+        {% endif %}
+    {% endif %}
+    volumes:
+      - "{{ docker_pihole_service_volume_etc }}/:/etc/pihole/"
+      - "{{ docker_pihole_service_volume_dnsmasq }}/:/etc/dnsmasq.d/"
+    dns:
+      - 127.0.0.1
+      - "{{ docker_pihole_dns_fallback }}"
+    ports:
+      - 443/tcp
+      - 53/tcp
+      - 53/udp
+      - 67/udp
+      - 80/tcp
+    environment:
+      DNS1: {{ docker_pihole_dns_1 }}
+      DNS2: {{ docker_pihole_dns_2 }}
+    restart: unless-stopped
+
+{% if docker_pihole_service_network_name | default('') | length > 0 %}
+networks:
+  {{ docker_pihole_service_network_name }}:
+    driver: {{ docker_pihole_service_network_driver }}
+    {% if docker_pihole_service_network_driver == "macvlan" %}
+    driver_opts:
+      parent: {{ docker_pihole_service_network_parent }}
+    {% endif %}
+    ipam:
+      config:
+        - subnet: {{ docker_pihole_service_network_subnet }}
+          gateway: {{ docker_pihole_service_network_gateway }}
+          ip_range: {{ docker_pihole_service_network_ipv4 }}/32
+{% endif %}
